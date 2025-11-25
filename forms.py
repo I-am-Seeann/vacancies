@@ -45,7 +45,7 @@ class VacancyForm(FlaskForm):
     company = StringField('Company',
                          validators=[DataRequired(), Length(max=50)])
     salary = StringField('Salary',
-                        validators=[Length(max=20)])
+                         validators=[DataRequired(), Length(max=20)])
     location = StringField('Location',
                           validators=[DataRequired(), Length(max=50)])
     category = SelectField('Category',
@@ -58,3 +58,27 @@ class VacancyForm(FlaskForm):
                           ],
                           validators=[DataRequired()])
     submit = SubmitField('Post Vacancy')
+
+class EditVacancyForm(FlaskForm):
+    title = StringField('Job Title',
+                       validators=[DataRequired(), Length(max=100)])
+    short_description = TextAreaField('Short Description',
+                                     validators=[DataRequired(), Length(max=200)])
+    full_description = TextAreaField('Full Description',
+                                    validators=[DataRequired()])
+    company = StringField('Company',
+                         validators=[DataRequired(), Length(max=50)])
+    salary = StringField('Salary',
+                        validators=[DataRequired(), Length(max=20)])
+    location = StringField('Location',
+                          validators=[DataRequired(), Length(max=50)])
+    category = SelectField('Category',
+                          choices=[
+                              ('it', 'IT'),
+                              ('design', 'Design'),
+                              ('marketing', 'Marketing'),
+                              ('sales', 'Sales'),
+                              ('other', 'Other')
+                          ],
+                          validators=[DataRequired()])
+    submit = SubmitField('Update Vacancy')

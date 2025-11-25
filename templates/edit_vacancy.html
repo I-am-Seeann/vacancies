@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    Add Vacancy
+    Edit {{ vacancy.title }}
 {% endblock %}
 
 {% block content %}
@@ -10,16 +10,16 @@
         <div class="col-md-8">
             <div class="card">
                 <div class="card-header">
-                    <h4 class="mb-0">Post a New Job Vacancy</h4>
+                    <h4 class="mb-0">Edit Vacancy: {{ vacancy.title }}</h4>
                 </div>
                 <div class="card-body">
                     <form method="POST">
                         {{ form.hidden_tag() }}
-
+                        
                         <!-- Job Title -->
                         <div class="mb-3">
                             {{ form.title.label(class="form-label") }}
-                            {{ form.title(class="form-control", placeholder="e.g. Senior Software Developer") }}
+                            {{ form.title(class="form-control") }}
                             {% if form.title.errors %}
                                 <div class="text-danger">
                                     {% for error in form.title.errors %}
@@ -32,7 +32,7 @@
                         <!-- Company -->
                         <div class="mb-3">
                             {{ form.company.label(class="form-label") }}
-                            {{ form.company(class="form-control", placeholder="e.g. Tech Corp Inc.") }}
+                            {{ form.company(class="form-control") }}
                             {% if form.company.errors %}
                                 <div class="text-danger">
                                     {% for error in form.company.errors %}
@@ -45,7 +45,7 @@
                         <!-- Location -->
                         <div class="mb-3">
                             {{ form.location.label(class="form-label") }}
-                            {{ form.location(class="form-control", placeholder="e.g. Remote, Tbilisi, etc.") }}
+                            {{ form.location(class="form-control") }}
                             {% if form.location.errors %}
                                 <div class="text-danger">
                                     {% for error in form.location.errors %}
@@ -58,7 +58,7 @@
                         <!-- Salary -->
                         <div class="mb-3">
                             {{ form.salary.label(class="form-label") }}
-                            {{ form.salary(class="form-control", placeholder="e.g. $50,000 - $70,000") }}
+                            {{ form.salary(class="form-control") }}
                             {% if form.salary.errors %}
                                 <div class="text-danger">
                                     {% for error in form.salary.errors %}
@@ -84,7 +84,7 @@
                         <!-- Short Description -->
                         <div class="mb-3">
                             {{ form.short_description.label(class="form-label") }}
-                            {{ form.short_description(class="form-control", rows="3", placeholder="Brief summary of the position (max 200 characters)") }}
+                            {{ form.short_description(class="form-control", rows="3") }}
                             {% if form.short_description.errors %}
                                 <div class="text-danger">
                                     {% for error in form.short_description.errors %}
@@ -97,7 +97,7 @@
                         <!-- Full Description -->
                         <div class="mb-4">
                             {{ form.full_description.label(class="form-label") }}
-                            {{ form.full_description(class="form-control", rows="6", placeholder="Detailed job description, requirements, benefits...") }}
+                            {{ form.full_description(class="form-control", rows="6") }}
                             {% if form.full_description.errors %}
                                 <div class="text-danger">
                                     {% for error in form.full_description.errors %}
@@ -110,7 +110,7 @@
                         <!-- Buttons -->
                         <div class="d-flex gap-2">
                             {{ form.submit(class="btn btn-primary") }}
-                            <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary">Cancel</a>
+                            <a href="{{ url_for('vacancy_info', vacancy_id=vacancy.id) }}" class="btn btn-outline-secondary">Cancel</a>
                         </div>
                     </form>
                 </div>

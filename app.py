@@ -1,11 +1,12 @@
 import os
 import secrets
+from datetime import datetime
 
 from flask import Flask, render_template, url_for, redirect, flash, request
 from flask_wtf import CSRFProtect
 
 from models import User, Vacancy
-from forms import LoginForm, RegistrationForm, EditProfileForm
+from forms import LoginForm, RegistrationForm, EditProfileForm, VacancyForm, EditVacancyForm
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from db import db
 app = Flask(__name__)
@@ -68,7 +69,7 @@ def test_relationship():
         category='IT',
         author_id=user.id,
         short_description='Develop amazing software',
-        long_description='We are looking for a skilled software developer...',
+        full_description='We are looking for a skilled software developer...',
         company='Tech Corp',
         salary='$80,000',
         location='Remote'
@@ -90,7 +91,52 @@ def test_relationship():
 
 @app.route('/')
 def vacancies():
-    return render_template('index.html')
+    all_vacancies = Vacancy.query.order_by(Vacancy.date_created.desc()).all()
+    return render_template('index.html', vacancies=all_vacancies)
+
+@app.route('/vacancy/<int:vacancy_id>')
+def vacancy_info(vacancy_id):
+    vacancy = Vacancy.query.get_or_404(vacancy_id)
+    return render_template('vacancy.html', vacancy=vacancy)
+
+
+@app.route('/edit_vacancy/<int:vacancy_id>', methods=['GET', 'POST'])
+@login_required
+def edit_vacancy(vacancy_id):
+    vacancy = Vacancy.query.get_or_404(vacancy_id)
+
+    # Check if current user is the author
+    if vacancy.author != current_user:
+        flash('You can only edit your own vacancies!', 'danger')
+        return redirect(url_for('vacancies'))
+
+    form = EditVacancyForm()
+
+    # Pre-populate form with current data on GET request
+    if request.method == 'GET':
+        form.title.data = vacancy.title
+        form.category.data = vacancy.category
+        form.short_description.data = vacancy.short_description
+        form.full_description.data = vacancy.full_description
+        form.company.data = vacancy.company
+        form.salary.data = vacancy.salary
+        form.location.data = vacancy.location
+
+    if form.validate_on_submit():
+        vacancy.title = form.title.data
+        vacancy.category = form.category.data
+        vacancy.short_description = form.short_description.data
+        vacancy.full_description = form.full_description.data
+        vacancy.company = form.company.data
+        vacancy.salary = form.salary.data
+        vacancy.location = form.location.data
+
+        db.session.commit()
+        flash('Vacancy updated successfully!', 'success')
+        return redirect(url_for('vacancy_info', vacancy_id=vacancy.id))
+
+    return render_template('edit_vacancy.html', form=form, vacancy=vacancy)
+
 
 @app.route('/about')
 def about():
@@ -164,12 +210,52 @@ def register():
 @app.route('/profile')
 @login_required
 def profile():
-    return render_template('profile.html')
+    return render_template('profile.html', user=current_user)
 
-@app.route('/add_vacancy')
+@app.route('/user/<string:username>')
+def user_profile(username):
+    user = User.query.filter_by(username=username).first_or_404()
+    # Show other user's profile using the SAME template
+    return render_template('profile.html', user=user)
+
+
+@app.route('/add_vacancy', methods=['GET', 'POST'])
 @login_required
 def add_vacancy():
-    return render_template('add_vacancy.html')
+    vacancy_form = VacancyForm()
+    if vacancy_form.validate_on_submit():
+        vacancy = Vacancy(
+            title=vacancy_form.title.data,
+            category=vacancy_form.category.data,
+            short_description=vacancy_form.short_description.data,
+            full_description=vacancy_form.full_description.data,
+            company=vacancy_form.company.data,
+            salary=vacancy_form.salary.data,
+            location=vacancy_form.location.data,
+            author_id=current_user.id
+        )
+        db.session.add(vacancy)
+        db.session.commit()
+        flash('Vacancy posted successfully!', 'success')
+        return redirect(url_for('profile'))
+
+    return render_template('add_vacancy.html', form=vacancy_form)
+
+
+@app.route('/delete_vacancy/<int:vacancy_id>', methods=['POST'])
+@login_required
+def delete_vacancy(vacancy_id):
+    vacancy = Vacancy.query.get_or_404(vacancy_id)
+
+    # Check if current user is the author
+    if vacancy.author != current_user:
+        flash('You can only delete your own vacancies!', 'danger')
+        return redirect(url_for('vacancies'))
+
+    db.session.delete(vacancy)
+    db.session.commit()
+    flash('Vacancy deleted successfully!', 'success')
+    return redirect(url_for('profile'))
 
 
 @app.route('/edit_profile', methods=['GET', 'POST'])

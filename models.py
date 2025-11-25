@@ -32,7 +32,7 @@ class Vacancy(db.Model):
     category = db.Column(db.String(100), nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     short_description = db.Column(db.String(200), nullable=False)
-    long_description = db.Column(db.Text, nullable=False)
+    full_description = db.Column(db.Text, nullable=False)
     company = db.Column(db.String(50), nullable=False)
     salary = db.Column(db.String(20), nullable=False)
     location = db.Column(db.String(50), nullable=False)
