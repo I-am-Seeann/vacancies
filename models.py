@@ -5,12 +5,13 @@ from datetime import datetime
 
 db = SQLAlchemy()
 
-class Users(db.Model, UserMixin):
+class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(25), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
+    username = db.Column(db.String(25), unique=True, nullable=False)
+    image_file = db.Column(db.String(20), nullable=False, default='default.png')
     password_hash = db.Column(db.String(128), nullable=False)
-    date_created = db.Column(db.DateTime, default=datetime.now)
+    vacancies = db.relationship('Vacancy', backref='author', lazy=True)
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -20,3 +21,18 @@ class Users(db.Model, UserMixin):
 
     def __repr__(self):
         return f"<User {self.username}>"
+
+class Vacancy(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.String(100), nullable=False)
+    category = db.Column(db.String(100), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    short_description = db.Column(db.String(200), nullable=False)
+    long_description = db.Column(db.Text, nullable=False)
+    company = db.Column(db.String(50), nullable=False)
+    salary = db.Column(db.String(20), nullable=False)
+    location = db.Column(db.String(50), nullable=False)
+    date_created = db.Column(db.DateTime, nullable=False, default=datetime.now)
+
+    def __repr__(self):
+        return f"<Vacancy {self.title}>"
