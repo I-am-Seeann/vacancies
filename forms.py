@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, PasswordField, TextAreaField, SelectField, SubmitField
+from flask_wtf.file import FileRequired, FileAllowed
+from wtforms import StringField, PasswordField, TextAreaField, SelectField, SubmitField, FileField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 
 #TODO ar dagaviwydes parolis sigrdzis 8-mde gazrda!
@@ -17,6 +18,15 @@ class RegistrationForm(FlaskForm):
     confirm_password = PasswordField('Confirm Password',
                                     validators=[DataRequired(), EqualTo('password')])
     submit = SubmitField('Register')
+
+class EditProfileForm(FlaskForm):
+    email = StringField('Email',
+                        validators=[DataRequired(), Email()])
+    username = StringField('Username',
+                          validators=[DataRequired(), Length(max=MAX_USERNAME_LENGTH)])
+    image = FileField('Change profile picture', validators=[FileAllowed(['jpg', 'png', 'jpeg'])])
+    submit = SubmitField('Apply Changes')
+
 
 class LoginForm(FlaskForm):
     username = StringField('Username',

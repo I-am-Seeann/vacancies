@@ -8,7 +8,7 @@ class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(120), unique=True, nullable=False)
     username = db.Column(db.String(25), unique=True, nullable=False)
-    image_file = db.Column(db.String(20), nullable=False, default='default.png')
+    image_file = db.Column(db.String(200), nullable=False, default='default.png')
     password_hash = db.Column(db.String(128), nullable=False)
     vacancies = db.relationship('Vacancy', backref='author', lazy=True)
 

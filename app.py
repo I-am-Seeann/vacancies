@@ -1,7 +1,11 @@
-from flask import Flask, render_template, url_for, redirect, flash
+import os
+import secrets
+
+from flask import Flask, render_template, url_for, redirect, flash, request
 from flask_wtf import CSRFProtect
+
 from models import User, Vacancy
-from forms import LoginForm, RegistrationForm
+from forms import LoginForm, RegistrationForm, EditProfileForm
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from db import db
 app = Flask(__name__)
@@ -14,7 +18,7 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///vacancies.db'
 # Initialize Flask-Login
 login_manager = LoginManager()
 login_manager.init_app(app)
-login_manager.login_view = 'login'  # Redirect to login if @login_required fails
+login_manager.login_view = 'login'
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -166,6 +170,35 @@ def profile():
 @login_required
 def add_vacancy():
     return render_template('add_vacancy.html')
+
+
+@app.route('/edit_profile', methods=['GET', 'POST'])
+@login_required
+def edit_profile():
+    edited_form = EditProfileForm()
+
+    if request.method == 'GET':
+        edited_form.username.data = current_user.username
+        edited_form.email.data = current_user.email
+
+    if edited_form.validate_on_submit():
+        current_user.username = edited_form.username.data
+        current_user.email = edited_form.email.data
+
+        if edited_form.image.data:
+            random_hex = secrets.token_hex(8)
+            _, ext = os.path.splitext(edited_form.image.data.filename)
+            image_file = f'{random_hex}{ext}'
+            image_path = os.path.join(app.root_path, 'static/images', image_file)
+            edited_form.image.data.save(image_path)
+            current_user.image_file = image_file
+
+        db.session.commit()
+        flash('Your changes have been saved!', 'success')
+        return redirect(url_for('profile'))
+
+    return render_template('edit_profile.html', form=edited_form)
+
 
 if __name__ == '__main__':
     app.run(debug=True)
