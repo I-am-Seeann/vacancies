@@ -1,9 +1,8 @@
-from flask_sqlalchemy import SQLAlchemy
+from db import db
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
-db = SQLAlchemy()
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -13,7 +12,12 @@ class User(db.Model, UserMixin):
     password_hash = db.Column(db.String(128), nullable=False)
     vacancies = db.relationship('Vacancy', backref='author', lazy=True)
 
-    def set_password(self, password):
+    @property
+    def password(self):
+        raise AttributeError('Reading unhashed password is prohibited!')
+
+    @password.setter
+    def password(self, password):
         self.password_hash = generate_password_hash(password)
 
     def check_password(self, password):
