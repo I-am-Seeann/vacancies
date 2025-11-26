@@ -50,8 +50,36 @@
                             </div>
                         </div>
                     </div>
-                    {% endfor %}
-                </div>
+                {% endfor %}
+
+                <!-- Pagination Controls -->
+                {% if vacancies.pages > 1 %}
+                <nav aria-label="Page navigation">
+                    <ul class="pagination justify-content-center">
+                        <!-- Previous Page -->
+                        <li class="page-item {% if not vacancies.has_prev %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('vacancies', page=vacancies.prev_num) }}">Previous</a>
+                        </li>
+
+                        <!-- Page Numbers -->
+                        {% for page_num in vacancies.iter_pages(left_edge=2, right_edge=2, left_current=1, right_current=2) %}
+                            {% if page_num %}
+                                <li class="page-item {% if page_num == vacancies.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('vacancies', page=page_num) }}">{{ page_num }}</a>
+                                </li>
+                            {% else %}
+                                <li class="page-item disabled"><span class="page-link">...</span></li>
+                            {% endif %}
+                        {% endfor %}
+
+                        <!-- Next Page -->
+                        <li class="page-item {% if not vacancies.has_next %}disabled{% endif %}">
+                            <a class="page-link" href="{{ url_for('vacancies', page=vacancies.next_num) }}">Next</a>
+                        </li>
+                    </ul>
+                </nav>
+                {% endif %}
+
             {% else %}
                 <div class="text-center py-5">
                     <h4 class="text-muted">No vacancies available yet</h4>

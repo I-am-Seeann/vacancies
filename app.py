@@ -92,9 +92,20 @@ def test_relationship():
     """
 
 @app.route('/')
-def vacancies():
-    all_vacancies = Vacancy.query.order_by(Vacancy.date_created.desc()).all()
-    return render_template('index.html', vacancies=all_vacancies)
+@app.route('/page/<int:page>')  # Add this route
+def vacancies(page=1):  # Default to page 1
+    per_page = 6  # Show 6 vacancies per page
+    vacancies_pagination = Vacancy.query.order_by(Vacancy.date_created.desc()).paginate(
+        page=page, per_page=per_page, error_out=False
+    )
+
+    # Redirect to last page if page number is too high
+    if page > vacancies_pagination.pages > 0:
+        return redirect(url_for('vacancies', page=vacancies_pagination.pages))
+
+
+    return render_template('index.html', vacancies=vacancies_pagination)
+
 
 @app.route('/vacancy/<int:vacancy_id>')
 def vacancy_info(vacancy_id):
@@ -210,15 +221,36 @@ def register():
     return render_template('register.html', form=register_form)
 
 @app.route('/profile')
+@app.route('/profile/page/<int:page>')
 @login_required
-def profile():
-    return render_template('profile.html', user=current_user)
+def profile(page=1):
+    per_page = 3
+    vacancies_pagination = Vacancy.query.filter_by(author_id=current_user.id) \
+        .order_by(Vacancy.date_created.desc()) \
+        .paginate(page=page, per_page=per_page, error_out=False)
+
+    # Redirect to last page if page number is too high
+    if page > vacancies_pagination.pages > 0:
+        return redirect(url_for('profile', page=vacancies_pagination.pages))
+
+    return render_template('profile.html', user=current_user, vacancies=vacancies_pagination)
+
 
 @app.route('/user/<string:username>')
-def user_profile(username):
+@app.route('/user/<string:username>/page/<int:page>')
+def user_profile(username, page=1):
     user = User.query.filter_by(username=username).first_or_404()
-    # Show other user's profile using the SAME template
-    return render_template('profile.html', user=user)
+    per_page = 3
+    vacancies_pagination = Vacancy.query.filter_by(author_id=user.id) \
+        .order_by(Vacancy.date_created.desc()) \
+        .paginate(page=page, per_page=per_page, error_out=False)
+
+    # Redirect to last page if page number is too high
+    if page > vacancies_pagination.pages > 0:
+        return redirect(url_for('user_profile', username=username, page=vacancies_pagination.pages))
+
+    return render_template('profile.html', user=user, vacancies=vacancies_pagination)
+
 
 
 @app.route('/add_vacancy', methods=['GET', 'POST'])
