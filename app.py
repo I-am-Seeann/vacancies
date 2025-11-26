@@ -11,6 +11,7 @@ from cat_api import get_random_cat
 from db import db
 from forms import LoginForm, RegistrationForm, EditProfileForm, VacancyForm, EditVacancyForm
 from models import User, Vacancy
+from seed import seed_data
 
 app = Flask(__name__)
 
@@ -50,6 +51,10 @@ def load_user(user_id):
 db.init_app(app)
 with app.app_context():
     db.create_all()
+
+    # Auto-seed with sample data if database is empty
+    if User.query.count() == 0:
+        seed_data()
 
 @app.route('/test-db')
 def test_db():
