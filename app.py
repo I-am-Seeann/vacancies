@@ -1,16 +1,17 @@
+import logging
 import os
 import secrets
-import logging
 from logging.handlers import RotatingFileHandler
-from datetime import datetime
 
 from flask import Flask, render_template, url_for, redirect, flash, request
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf import CSRFProtect
 
-from models import User, Vacancy
-from forms import LoginForm, RegistrationForm, EditProfileForm, VacancyForm, EditVacancyForm
-from flask_login import LoginManager, login_user, logout_user, login_required, current_user
+from cat_api import get_random_cat
 from db import db
+from forms import LoginForm, RegistrationForm, EditProfileForm, VacancyForm, EditVacancyForm
+from models import User, Vacancy
+
 app = Flask(__name__)
 
 
@@ -475,6 +476,14 @@ def generate_test_data():
     flash('Test data generation complete!', 'info')
 
     return redirect(url_for('vacancies'))
+
+
+
+
+@app.route('/cat_pics')
+def cat_pics():
+    cat_image_url = get_random_cat(logger)
+    return render_template('cat_pics.html', cat_image_url=cat_image_url)
 
 
 if __name__ == '__main__':
