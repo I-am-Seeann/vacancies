@@ -309,21 +309,39 @@ def edit_profile():
         edited_form.email.data = current_user.email
 
     if edited_form.validate_on_submit():
-        current_user.username = edited_form.username.data
-        current_user.email = edited_form.email.data
+        # Check if email is already taken by another user
+        user_filtered_by_email = User.query.filter_by(email=edited_form.email.data).first()
+        if user_filtered_by_email and user_filtered_by_email.id != current_user.id:
+            message = f'Profile with email: <{edited_form.email.data}> already exists'
+            logger.warning(message)
+            flash(message, 'danger')
+            edited_form.email.errors.append(message)
 
-        if edited_form.image.data:
-            random_hex = secrets.token_hex(8)
-            _, ext = os.path.splitext(edited_form.image.data.filename)
-            image_file = f'{random_hex}{ext}'
-            image_path = os.path.join(app.root_path, 'static/images', image_file)
-            edited_form.image.data.save(image_path)
-            current_user.image_file = image_file
+        # Check if username is already taken by another user
+        user_filtered_by_username = User.query.filter_by(username=edited_form.username.data).first()
+        if user_filtered_by_username and user_filtered_by_username.id != current_user.id:
+            message = f'Username: <{edited_form.username.data}> is taken'
+            logger.info(message)
+            flash(message, 'danger')
+            edited_form.username.errors.append(message)
 
-        db.session.commit()
-        logger.info(f"User <{current_user.username}> edited profile")
-        flash('Your changes have been saved!', 'success')
-        return redirect(url_for('profile'))
+        # Only update user if no duplicate errors
+        if not edited_form.email.errors and not edited_form.username.errors:
+            current_user.username = edited_form.username.data
+            current_user.email = edited_form.email.data
+
+            if edited_form.image.data:
+                random_hex = secrets.token_hex(8)
+                _, ext = os.path.splitext(edited_form.image.data.filename)
+                image_file = f'{random_hex}{ext}'
+                image_path = os.path.join(app.root_path, 'static/images', image_file)
+                edited_form.image.data.save(image_path)
+                current_user.image_file = image_file
+
+            db.session.commit()
+            logger.info(f"User <{current_user.username}> edited profile")
+            flash('Your changes have been saved!', 'success')
+            return redirect(url_for('profile'))
 
     return render_template('edit_profile.html', form=edited_form)
 
