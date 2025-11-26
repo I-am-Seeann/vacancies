@@ -4,7 +4,7 @@ from wtforms import StringField, PasswordField, TextAreaField, SelectField, Subm
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 
 #TODO ar dagaviwydes parolis sigrdzis 8-mde gazrda!
-MIN_PASSWORD_LENGTH = 4
+MIN_PASSWORD_LENGTH = 8
 MAX_PASSWORD_LENGTH = 20
 MAX_USERNAME_LENGTH = 25
 

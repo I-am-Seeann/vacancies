@@ -11,10 +11,12 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from db import db
 app = Flask(__name__)
 
-#TODO secret key shesacvlelia!
-app.config["SECRET_KEY"] = "very secret key"
+import os
+
+
+app.config["SECRET_KEY"] = os.environ.get('SECRET_KEY') or 'dev-key-for-testing-only'
+csrf = CSRFProtect(app) # for manual forms for example: delete in profile
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///vacancies.db'
-# csrf = CSRFProtect(app)
 
 # Initialize Flask-Login
 login_manager = LoginManager()
@@ -284,6 +286,99 @@ def edit_profile():
         return redirect(url_for('profile'))
 
     return render_template('edit_profile.html', form=edited_form)
+
+
+@app.route('/delete_profile', methods=['POST'])
+@login_required
+def delete_profile():
+    # Get current user's vacancies and delete them first
+    vacancies = Vacancy.query.filter_by(author_id=current_user.id).all()
+    for vacancy in vacancies:
+        db.session.delete(vacancy)
+
+    # Delete the user
+    db.session.delete(current_user)
+    db.session.commit()
+
+    logout_user()
+    flash('Your account and all associated vacancies have been deleted.', 'info')
+    return redirect(url_for('vacancies'))
+
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('errors/404.html'), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('errors/500.html'), 500
+
+@app.route('/test-500')
+def test_500():
+    raise Exception("This is a test 500 error!")
+
+
+@app.route('/generate-test-data')
+def generate_test_data():
+    """Generate test users and vacancies (run once only!)"""
+    import random
+
+    # Don't run if data already exists
+    if User.query.count() > 1:  # More than just the default test user
+        flash('Test data already exists!', 'warning')
+        return redirect(url_for('vacancies'))
+
+    # Sample data
+    companies = ['TechCorp', 'WebSolutions', 'DataDrive', 'CloudSystems', 'InnovateLabs',
+                 'SoftWorks', 'DigitalCraft', 'CodeMasters', 'AppFactory', 'NetSolutions']
+
+    locations = ['Tbilisi', 'Batumi', 'Kutaisi', 'Remote', 'Hybrid', 'New York', 'London', 'Berlin']
+
+    job_titles = [
+        'Software Developer', 'Frontend Engineer', 'Backend Developer', 'Full Stack Developer',
+        'Data Scientist', 'DevOps Engineer', 'UI/UX Designer', 'Product Manager',
+        'Marketing Specialist', 'Sales Manager', 'Project Coordinator', 'System Administrator'
+    ]
+
+    # Create 10 test users
+    users = []
+    for i in range(1, 11):
+        user = User(
+            username=f't{i}',
+            email=f't{i}@example.com',
+            image_file='default.png'
+        )
+        user.password = f't{i}'
+        users.append(user)
+        db.session.add(user)
+
+    db.session.commit()
+    flash(f'Created {len(users)} test users', 'success')
+
+    # Create 20 test vacancies
+    vacancies = []
+    for i in range(20):
+        # Randomly assign to any of the test users
+        author = random.choice(users)
+
+        vacancy = Vacancy(
+            title=random.choice(job_titles),
+            category=random.choice(['it', 'design', 'marketing', 'sales', 'other']),
+            author_id=author.id,
+            short_description=f'This is a test vacancy #{i + 1} with exciting opportunities.',
+            full_description=f'This is a detailed description for test vacancy #{i + 1}. ' * 5,
+            company=random.choice(companies),
+            salary=f'${random.randint(30000, 100000)}',
+            location=random.choice(locations)
+        )
+        vacancies.append(vacancy)
+        db.session.add(vacancy)
+
+    db.session.commit()
+    flash(f'Created {len(vacancies)} test vacancies', 'success')
+    flash('Test data generation complete!', 'info')
+
+    return redirect(url_for('vacancies'))
 
 
 if __name__ == '__main__':

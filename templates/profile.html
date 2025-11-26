@@ -25,7 +25,21 @@
 
                     <!-- Show Edit Profile button only if it's the current user's profile -->
                     {% if user == current_user %}
+                        <!-- Edit Account -->
                         <a href="{{ url_for('edit_profile') }}" class="btn btn-outline-primary">Edit Profile</a>
+                        <!-- Delete Account -->
+                        <div class="mt-5 pt-4 border-top">
+                            <form action="{{ url_for('delete_profile') }}" method="POST" class="d-inline">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit"
+                                        class="btn btn-outline-danger"
+                                        onclick="return confirm('This will permanently delete your account and ALL your vacancies! This action cannot be undone. Are you sure?')">
+                                        Delete My Account
+                                </button>
+                            </form>
+                            <p class="text-danger">When you delete your account all vacancies posted by you will also get deleted!</p>
+
+                        </div>
                     {% endif %}
                 </div>
             </div>
@@ -69,6 +83,7 @@
                                     <form action="{{ url_for('delete_vacancy', vacancy_id=vacancy.id) }}"
                                           method="POST"
                                           class="d-inline">
+                                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button type="submit" class="btn btn-outline-danger btn-sm"
                                                 onclick="return confirm('Are you sure that you want to delete this vacancy?')">
                                             Delete

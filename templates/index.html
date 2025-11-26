@@ -37,8 +37,7 @@
                                     </small>
                                     <br>
                                     <small class="text-muted">
-{#                                        TODO user profile for others to just visit! #}
-                                        Posted by: <a href="#" class="text-decoration-none">{{ vacancy.author.username }}</a>
+                                        Posted by: <a href="{{ url_for('user_profile', username=vacancy.author.username) }}" class="text-decoration-none">{{ vacancy.author.username }}</a>
                                     </small>
                                     <br>
                                     <small class="text-muted">
