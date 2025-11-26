@@ -45,16 +45,19 @@
             <!-- Right User Info -->
             <div class="d-flex align-items-center ms-auto me-3">
                 {% if current_user.is_authenticated %}
-                    <span class="navbar-text me-3">{{ current_user.username }}</span>
-                    <img src="{{ url_for('static', filename='images/' + current_user.image_file) }}"
-                         class="rounded-circle me-3"
-                         alt="Profile Picture"
-                         width="40"
-                         height="40">
+                    <a href="{{ url_for('profile') }}" class="d-flex align-items-center text-decoration-none">
+                        <span class="navbar-text me-2">{{ current_user.username }}</span>
+                        <img src="{{ url_for('static', filename='images/' + current_user.image_file) }}"
+                             class="rounded-circle"
+                             alt="Profile Picture"
+                             width="40"
+                             height="40">
+                    </a>
                 {% else %}
                     <span class="navbar-text me-3">Guest</span>
                 {% endif %}
             </div>
+
 
         </div>
     </nav>
