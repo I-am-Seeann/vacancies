@@ -8,14 +8,16 @@
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
+
             <div class="card">
                 <div class="card-header">
                     <h4 class="mb-0">Edit Vacancy: {{ vacancy.title }}</h4>
                 </div>
+
                 <div class="card-body">
                     <form method="POST">
                         {{ form.hidden_tag() }}
-                        
+
                         <!-- Job Title -->
                         <div class="mb-3">
                             {{ form.title.label(class="form-label") }}
@@ -110,11 +112,16 @@
                         <!-- Buttons -->
                         <div class="d-flex gap-2">
                             {{ form.submit(class="btn btn-primary") }}
-                            <a href="{{ url_for('vacancy_info', vacancy_id=vacancy.id) }}" class="btn btn-outline-secondary">Cancel</a>
+                            <a href="{{ url_for('vacancy_info', vacancy_id=vacancy.id) }}"
+                               class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
                         </div>
+
                     </form>
                 </div>
             </div>
+
         </div>
     </div>
 </div>
