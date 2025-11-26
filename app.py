@@ -1,5 +1,7 @@
 import os
 import secrets
+import logging
+from logging.handlers import RotatingFileHandler
 from datetime import datetime
 
 from flask import Flask, render_template, url_for, redirect, flash, request
@@ -11,7 +13,6 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from db import db
 app = Flask(__name__)
 
-import os
 
 
 app.config["SECRET_KEY"] = os.environ.get('SECRET_KEY') or 'dev-key-for-testing-only'
@@ -22,6 +23,24 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///vacancies.db'
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
+
+
+
+# This makes ALL logs go to console
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s %(message)s',
+    handlers=[logging.StreamHandler()]  # Console only for basic config
+)
+
+# Then add your FILE handler only to your logger
+logger = logging.getLogger('JobBoard')
+file_handler = RotatingFileHandler('logs/job_portal.log', maxBytes=10000, backupCount=5)
+file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s JobBoard %(message)s'))
+logger.addHandler(file_handler)
+logger.setLevel(logging.INFO)
+logger.propagate = False  # Important: don't duplicate to basic config handlers
+
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -145,6 +164,7 @@ def edit_vacancy(vacancy_id):
         vacancy.location = form.location.data
 
         db.session.commit()
+        logger.info(f"Updated vacancy title: <{vacancy.title}> by <{vacancy.author.username}>")
         flash('Vacancy updated successfully!', 'success')
         return redirect(url_for('vacancy_info', vacancy_id=vacancy.id))
 
@@ -155,6 +175,33 @@ def edit_vacancy(vacancy_id):
 def about():
     return render_template('about.html')
 
+
+# @app.route('/login', methods=['GET', 'POST'])
+# def login():
+#     # if user is already logged in, redirect to profile
+#     if current_user.is_authenticated:
+#         return redirect(url_for('profile'))
+#
+#     login_form = LoginForm()
+#     if login_form.validate_on_submit():
+#         username = login_form.username.data
+#         password = login_form.password.data
+#
+#         # find user by username
+#         user = User.query.filter_by(username=username).first()
+#
+#         # check if user exists and password is correct
+#         if user and user.check_password(password):
+#             login_user(user)
+#             logger.info(f"User <{username}> logged in successfully")
+#             flash(f'Nice to see you, {username}!', 'info')
+#             return redirect(url_for('profile'))
+#         else:
+#             flash('Invalid username or password', 'danger')
+#             logger.warning(f"Failed Login attempt by user {username}")
+#             return redirect(url_for('login'))
+#
+#     return render_template('login.html', form=login_form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -173,20 +220,24 @@ def login():
         # check if user exists and password is correct
         if user and user.check_password(password):
             login_user(user)
+            logger.info(f"User <{username}> logged in successfully")
             flash(f'Nice to see you, {username}!', 'info')
             return redirect(url_for('profile'))
         else:
-            flash('Invalid username or password', 'danger')
-            return redirect(url_for('login'))
+            # Add error to form instead of flash
+            login_form.username.errors.append('Invalid username or password')
+            logger.warning(f'Failed Login attempt by user <{username}>')
 
     return render_template('login.html', form=login_form)
 
 @app.route('/logout')
 @login_required
 def logout():
+    logger.info(f"User <{current_user.username}> loging out")
     logout_user()
     flash('See you soon again!', 'secondary')
     return redirect(url_for('vacancies'))
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -199,26 +250,35 @@ def register():
         # check if user with same mail already exists
         user_filtered_by_email = User.query.filter_by(email=register_form.email.data).first()
         if user_filtered_by_email:
-            flash(f'Account with email: "{register_form.email.data}" already exists', 'danger')
-            return redirect(url_for('register'))
+            message = f'Profile with email: <{user_filtered_by_email.email}> already exists'
+            logger.warning(message)
+            flash(message, 'danger')
+            register_form.email.errors.append(message)
 
         # check if username is already taken
         user_filtered_by_username = User.query.filter_by(username=register_form.username.data).first()
         if user_filtered_by_username:
-            flash(f'Username: "{register_form.username.data}" is taken', 'danger')
-            return redirect(url_for('register'))
+            message = f'Username: <{register_form.username.data}> is taken'
+            logger.info(message)
+            flash(message, 'danger')
+            register_form.username.errors.append(message)
 
-        # creating new user
-        user = User(username=register_form.username.data, email=register_form.email.data)
-        user.password = register_form.password.data
+        # Only create user if no duplicate errors
+        if not register_form.email.errors and not register_form.username.errors:
+            # creating new user
+            user = User(username=register_form.username.data, email=register_form.email.data)
+            user.password = register_form.password.data
 
-        # add user to database
-        db.session.add(user)
-        db.session.commit()
-        flash(f"Welcome {register_form.username.data}! Your account created successfully!", 'success')
-        return redirect(url_for('login'))
+            # add user to database
+            db.session.add(user)
+            db.session.commit()
+            logger.info(f"User <{user.username}> registered successfully")
+            flash(f"Welcome {register_form.username.data}! Your account created successfully!", 'success')
+            return redirect(url_for('login'))
 
     return render_template('register.html', form=register_form)
+
+
 
 @app.route('/profile')
 @app.route('/profile/page/<int:page>')
@@ -270,6 +330,7 @@ def add_vacancy():
         )
         db.session.add(vacancy)
         db.session.commit()
+        logger.info(f"User <{current_user.username}> added vacancy <{vacancy.title}>")
         flash('Vacancy posted successfully!', 'success')
         return redirect(url_for('profile'))
 
@@ -288,6 +349,7 @@ def delete_vacancy(vacancy_id):
 
     db.session.delete(vacancy)
     db.session.commit()
+    logger.info(f"User <{current_user.username}> deleted vacancy <{vacancy_id}>")
     flash('Vacancy deleted successfully!', 'success')
     return redirect(url_for('profile'))
 
@@ -314,6 +376,7 @@ def edit_profile():
             current_user.image_file = image_file
 
         db.session.commit()
+        logger.info(f"User <{current_user.username}> edited profile")
         flash('Your changes have been saved!', 'success')
         return redirect(url_for('profile'))
 
@@ -332,6 +395,7 @@ def delete_profile():
     db.session.delete(current_user)
     db.session.commit()
 
+    logger.info(f"User <{current_user.username}> deleted profile")
     logout_user()
     flash('Your account and all associated vacancies have been deleted.', 'info')
     return redirect(url_for('vacancies'))
