@@ -5,130 +5,189 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">Post a New Job Vacancy</h4>
+        <div class="col-lg-8">
+            <div class="vacancy-form-card">
+                <div class="vacancy-form-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>Post a New Job Vacancy
+                    </h4>
                 </div>
 
-                <div class="card-body">
-                    <form method="POST">
+                <div class="vacancy-form-body">
+                    <form method="POST" id="vacancyForm">
                         {{ form.hidden_tag() }}
 
                         <!-- Job Title -->
-                        <div class="mb-3">
-                            {{ form.title.label(class="form-label") }}
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-card-heading"></i>
+                                {{ form.title.label.text }}
+                                <span class="required-field"></span>
+                            </label>
                             {{ form.title(class="form-control", placeholder="e.g. Senior Software Developer") }}
-
+                            <div class="form-hint">
+                                <i class="bi bi-lightbulb"></i>Be specific and clear about the role
+                            </div>
                             {% if form.title.errors %}
-                                <div class="text-danger">
+                                <div class="text-danger mt-1">
                                     {% for error in form.title.errors %}
-                                        <small>{{ error }}</small>
+                                        <small><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</small>
                                     {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
 
                         <!-- Company -->
-                        <div class="mb-3">
-                            {{ form.company.label(class="form-label") }}
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-building"></i>
+                                {{ form.company.label.text }}
+                                <span class="required-field"></span>
+                            </label>
                             {{ form.company(class="form-control", placeholder="e.g. Tech Corp Inc.") }}
-
                             {% if form.company.errors %}
-                                <div class="text-danger">
+                                <div class="text-danger mt-1">
                                     {% for error in form.company.errors %}
-                                        <small>{{ error }}</small>
+                                        <small><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</small>
                                     {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
 
                         <!-- Location -->
-                        <div class="mb-3">
-                            {{ form.location.label(class="form-label") }}
-                            {{ form.location(class="form-control", placeholder="e.g. Remote, Tbilisi, etc.") }}
-
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-geo-alt"></i>
+                                {{ form.location.label.text }}
+                                <span class="required-field"></span>
+                            </label>
+                            {{ form.location(class="form-control", placeholder="e.g. Remote, Tbilisi, New York, etc.") }}
                             {% if form.location.errors %}
-                                <div class="text-danger">
+                                <div class="text-danger mt-1">
                                     {% for error in form.location.errors %}
-                                        <small>{{ error }}</small>
+                                        <small><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</small>
                                     {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
 
                         <!-- Salary -->
-                        <div class="mb-3">
-                            {{ form.salary.label(class="form-label") }}
-                            {{ form.salary(class="form-control", placeholder="e.g. $50,000 - $70,000") }}
-
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-cash"></i>
+                                {{ form.salary.label.text }}
+                            </label>
+                            {{ form.salary(class="form-control", placeholder="e.g. $50,000 - $70,000 or Negotiable") }}
+                            <div class="form-hint">
+                                <i class="bi bi-info-circle"></i>Include currency and range for better response
+                            </div>
                             {% if form.salary.errors %}
-                                <div class="text-danger">
+                                <div class="text-danger mt-1">
                                     {% for error in form.salary.errors %}
-                                        <small>{{ error }}</small>
+                                        <small><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</small>
                                     {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
 
                         <!-- Category -->
-                        <div class="mb-3">
-                            {{ form.category.label(class="form-label") }}
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-tags"></i>
+                                {{ form.category.label.text }}
+                                <span class="required-field"></span>
+                            </label>
                             {{ form.category(class="form-select") }}
-
                             {% if form.category.errors %}
-                                <div class="text-danger">
+                                <div class="text-danger mt-1">
                                     {% for error in form.category.errors %}
-                                        <small>{{ error }}</small>
+                                        <small><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</small>
                                     {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
 
                         <!-- Short Description -->
-                        <div class="mb-3">
-                            {{ form.short_description.label(class="form-label") }}
-                            {{ form.short_description(class="form-control", rows="3",
-                               placeholder="Brief summary of the position (max 200 characters)") }}
-
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-text-paragraph"></i>
+                                {{ form.short_description.label.text }}
+                                <span class="required-field"></span>
+                            </label>
+                            {{ form.short_description(class="form-control", rows="3", placeholder="Brief summary of the position (max 200 characters)") }}
+                            <div class="char-counter" id="shortDescCounter">0/200</div>
+                            <div class="form-hint">
+                                <i class="bi bi-chat-quote"></i>This will be shown in vacancy lists
+                            </div>
                             {% if form.short_description.errors %}
-                                <div class="text-danger">
+                                <div class="text-danger mt-1">
                                     {% for error in form.short_description.errors %}
-                                        <small>{{ error }}</small>
+                                        <small><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</small>
                                     {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
 
                         <!-- Full Description -->
-                        <div class="mb-4">
-                            {{ form.full_description.label(class="form-label") }}
-                            {{ form.full_description(class="form-control", rows="6",
-                               placeholder="Detailed job description, requirements, benefits...") }}
-
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-file-text"></i>
+                                {{ form.full_description.label.text }}
+                                <span class="required-field"></span>
+                            </label>
+                            {{ form.full_description(class="form-control", rows="6", placeholder="Detailed job description, requirements, responsibilities, benefits...") }}
+                            <div class="form-hint">
+                                <i class="bi bi-list-check"></i>Be detailed about requirements and expectations
+                            </div>
                             {% if form.full_description.errors %}
-                                <div class="text-danger">
+                                <div class="text-danger mt-1">
                                     {% for error in form.full_description.errors %}
-                                        <small>{{ error }}</small>
+                                        <small><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</small>
                                     {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
 
-                        <!-- Actions -->
-                        <div class="d-flex gap-2">
+                        <!-- Form Actions -->
+                        <div class="form-actions">
                             {{ form.submit(class="btn btn-primary") }}
-                            <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary">Cancel</a>
+                            <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
                         </div>
-
                     </form>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
+
+<!-- Character counter script -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const shortDesc = document.querySelector('#short_description');
+    const counter = document.querySelector('#shortDescCounter');
+
+    if (shortDesc && counter) {
+        shortDesc.addEventListener('input', function() {
+            const length = this.value.length;
+            counter.textContent = `${length}/200`;
+
+            // Update counter color based on length
+            counter.classList.remove('warning', 'danger');
+            if (length > 180) {
+                counter.classList.add('warning');
+            }
+            if (length > 200) {
+                counter.classList.add('danger');
+            }
+        });
+
+        // Initialize counter
+        counter.textContent = `${shortDesc.value.length}/200`;
+    }
+});
+</script>
 {% endblock %}

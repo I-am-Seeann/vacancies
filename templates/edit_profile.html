@@ -5,23 +5,24 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container py-4">
     <div class="row justify-content-center">
-        <div class="col-md-8">
-
-            <div class="card">
-                <div class="card-header">
-                    <h4 class="mb-0">Edit Your Profile</h4>
+        <div class="col-lg-8">
+            <div class="vacancy-form-card">
+                <div class="vacancy-form-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-gear me-2"></i>Edit Your Profile
+                    </h4>
                 </div>
 
-                <div class="card-body">
+                <div class="vacancy-form-body">
                     <form method="POST" enctype="multipart/form-data">
                         {{ form.hidden_tag() }}
 
                         <!-- Current Profile Picture -->
                         <div class="text-center mb-4">
                             <img src="{{ url_for('static', filename='images/' + current_user.image_file) }}"
-                                 class="rounded-circle"
+                                 class="rounded-circle profile-picture"
                                  alt="Current Profile Picture"
                                  width="150"
                                  height="150">
@@ -30,61 +31,68 @@
                         </div>
 
                         <!-- Username Field -->
-                        <div class="mb-3">
-                            {{ form.username.label(class="form-label") }}
-                            {{ form.username(class="form-control") }}
-
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-person-circle"></i>
+                                {{ form.username.label.text }}
+                                <span class="required-field"></span>
+                            </label>
+                            {{ form.username(class="form-control", placeholder="Enter your username") }}
                             {% if form.username.errors %}
-                                <div class="text-danger">
+                                <div class="text-danger mt-1">
                                     {% for error in form.username.errors %}
-                                        <small>{{ error }}</small>
+                                        <small><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</small>
                                     {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
 
                         <!-- Email Field -->
-                        <div class="mb-3">
-                            {{ form.email.label(class="form-label") }}
-                            {{ form.email(class="form-control") }}
-
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-envelope"></i>
+                                {{ form.email.label.text }}
+                                <span class="required-field"></span>
+                            </label>
+                            {{ form.email(class="form-control", placeholder="Enter your email address") }}
                             {% if form.email.errors %}
-                                <div class="text-danger">
+                                <div class="text-danger mt-1">
                                     {% for error in form.email.errors %}
-                                        <small>{{ error }}</small>
+                                        <small><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</small>
                                     {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
 
                         <!-- Profile Picture Upload -->
-                        <div class="mb-4">
-                            {{ form.image.label(class="form-label") }}
+                        <div class="form-group">
+                            <label class="form-label">
+                                <i class="bi bi-image"></i>
+                                {{ form.image.label.text }}
+                            </label>
                             {{ form.image(class="form-control") }}
-
-                            <div class="form-text">
-                                Choose a new profile picture (JPG, PNG, JPEG)
+                            <div class="form-hint">
+                                <i class="bi bi-info-circle"></i>Choose a new profile picture (JPG, PNG, JPEG)
                             </div>
-
                             {% if form.image.errors %}
-                                <div class="text-danger">
+                                <div class="text-danger mt-1">
                                     {% for error in form.image.errors %}
-                                        <small>{{ error }}</small>
+                                        <small><i class="bi bi-exclamation-triangle me-1"></i>{{ error }}</small>
                                     {% endfor %}
                                 </div>
                             {% endif %}
                         </div>
 
-                        <!-- Buttons -->
-                        <div class="d-flex gap-2">
+                        <!-- Form Actions -->
+                        <div class="form-actions">
                             {{ form.submit(class="btn btn-primary") }}
-                            <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary">Cancel</a>
+                            <a href="{{ url_for('profile') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-2"></i>Cancel
+                            </a>
                         </div>
-
                     </form>
                 </div>
             </div>
-
         </div>
     </div>
 </div>

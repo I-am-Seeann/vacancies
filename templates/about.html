@@ -5,5 +5,76 @@
 {% endblock %}
 
 {% block content %}
-    <h1>About Page</h1>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="vacancy-form-card">
+                <div class="vacancy-form-header">
+                    <h4 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>About This Project
+                    </h4>
+                </div>
+
+                <div class="vacancy-form-body">
+                    <div class="text-center mb-5">
+                        <h1 class="text-yellow mb-4">Hey there!</h1>
+                        <p class="lead text-light">This is my first attempt at building a real website with Flask!</p>
+                    </div>
+
+                    <div class="about-content">
+                        <div class="mb-4">
+                            <h4 class="text-purple mb-3">
+                                <i class="bi me-2"></i>The Learning Journey
+                            </h4>
+                            <p class="text-light">
+                                I wanted to see if I could create something that actually works - with a real database,
+                                user accounts, and all the basic CRUD operations. So here we are!
+                            </p>
+                        </div>
+
+                        <div class="mb-4">
+                            <h4 class="text-purple mb-3">
+                                <i class="bi me-2"></i>The Philosophy
+                            </h4>
+                            <p class="text-light">
+                                My approach: if we don't try <em>too</em> hard to be fancy, maybe things won't break!
+                                Simple, functional, and hopefully not too buggy.
+                            </p>
+                        </div>
+
+                        <div class="mb-4">
+                            <h4 class="text-purple mb-3">
+                                <i class="bi me-2"></i>What's Next?
+                            </h4>
+                            <p class="text-light">
+                                I'll be improving this project over time. More features, better code,
+                                and definitely more cats to come!
+                            </p>
+                        </div>
+
+                        <div class="text-center mt-5 pt-4 border-top">
+                            <p class="text-muted">
+                                Built with Flask, SQLAlchemy, and probably too much CSS
+                            </p>
+                            <small class="text-muted">
+                                P.S. If you find any bugs, just refresh the page and pretend you didn't see anything
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.about-content {
+    line-height: 1.7;
+}
+
+.about-content p {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+</style>
 {% endblock %}

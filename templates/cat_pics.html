@@ -10,10 +10,10 @@
         <div class="col-12">
             <h1 class="mb-4">Don't worry!</h1>
             <p class="lead mb-4">Job hunting can be stressful. Look at a random cat pic to brighten up your day!</p>
-            
+
             {% if cat_image_url %}
                 <div class="card mx-auto" style="max-width: 500px;">
-                    <img src="{{ cat_image_url }}" class="card-img-top" alt="Random Cat" 
+                    <img src="{{ cat_image_url }}" class="card-img-top" alt="Random Cat"
                          style="max-height: 500px; object-fit: cover;">
                     <div class="card-body">
                         <a href="{{ url_for('cat_pics') }}" class="btn btn-primary">🐾 Another Cat Please!</a>

@@ -5,100 +5,162 @@
 {% endblock %}
 
 {% block content %}
-<div class="container">
+<div class="container py-4">
     <div class="row justify-content-center">
         <div class="col-lg-8">
 
-            <!-- Back Button -->
-            <div class="mb-4">
-                <a href="javascript:history.back()" class="btn btn-outline-secondary">← Go Back</a>
+            <!-- Top Action Buttons -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <!-- Back Button on the left -->
+                <a href="javascript:history.back()" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left me-2"></i>Go Back
+                </a>
+
+                <!-- Edit and Delete buttons on the right (only for author) -->
+                {% if current_user.is_authenticated and current_user == vacancy.author %}
+                <div class="d-flex gap-2">
+                    <a href="{{ url_for('edit_vacancy', vacancy_id=vacancy.id) }}"
+                       class="btn btn-outline-primary">
+                       <i class="bi bi-pencil-square me-2"></i>Edit
+                    </a>
+
+                    <form action="{{ url_for('delete_vacancy', vacancy_id=vacancy.id) }}"
+                          method="POST"
+                          class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit"
+                                class="btn btn-outline-danger"
+                                onclick="return confirm('Are you sure that you want to delete this vacancy?')">
+                            <i class="bi bi-trash me-2"></i>Delete
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
             </div>
 
-            <!-- Vacancy Header -->
-            <div class="card mb-4">
-                <div class="card-body">
-
-                    <div class="d-flex justify-content-between align-items-start mb-3">
+            <!-- Vacancy Header Card -->
+            <div class="vacancy-detail-card mb-4">
+                <div class="vacancy-detail-header">
+                    <div class="d-flex justify-content-between align-items-start">
                         <div>
-                            <h1 class="h3 mb-2">{{ vacancy.title }}</h1>
-                            <h2 class="h5 text-muted mb-3">{{ vacancy.company }}</h2>
+                            <h1 class="h4 mb-2 text-white">{{ vacancy.title }}</h1>
+                            <h2 class="h6 text-white-50 mb-0">{{ vacancy.company }}</h2>
                         </div>
-                        <span class="badge bg-primary fs-6">{{ vacancy.category|upper }}</span>
+                        <span class="badge badge-category-{{ vacancy.category }}">{{ vacancy.category|upper }}</span>
                     </div>
+                </div>
 
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <strong>📍 Location:</strong> {{ vacancy.location }}
-                        </div>
-                        <div class="col-md-6">
-                            <strong>💰 Salary:</strong> {{ vacancy.salary }}
-                        </div>
-                    </div>
-
+                <div class="vacancy-detail-body">
                     <div class="row">
                         <div class="col-md-6">
-                            <strong>👤 Posted by:</strong>
-                            <a href="{{ url_for('user_profile', username=vacancy.author.username) }}"
-                               class="text-decoration-none">
-                               {{ vacancy.author.username }}
-                            </a>
+                            <div class="vacancy-meta-item mb-3">
+                                <i class="bi bi-geo-alt text-purple me-2"></i>
+                                <strong class="text-light">Location:</strong>
+                                <span class="text-muted ms-2">{{ vacancy.location }}</span>
+                            </div>
+                            <div class="vacancy-meta-item">
+                                <i class="bi bi-cash text-purple me-2"></i>
+                                <strong class="text-light">Salary:</strong>
+                                <span class="text-muted ms-2">{{ vacancy.salary }}</span>
+                            </div>
                         </div>
                         <div class="col-md-6">
-                            <strong>📅 Posted on:</strong>
-                            {{ vacancy.date_created.strftime('%B %d, %Y') }}
+                            <div class="vacancy-meta-item mb-3">
+                                <i class="bi bi-person text-purple me-2"></i>
+                                <strong class="text-light">Posted by:</strong>
+                                <a href="{{ url_for('user_profile', username=vacancy.author.username) }}"
+                                   class="text-yellow text-decoration-none ms-2">
+                                   {{ vacancy.author.username }}
+                                </a>
+                            </div>
+                            <div class="vacancy-meta-item">
+                                <i class="bi bi-calendar text-purple me-2"></i>
+                                <strong class="text-light">Posted on:</strong>
+                                <span class="text-muted ms-2">{{ vacancy.date_created.strftime('%B %d, %Y') }}</span>
+                            </div>
                         </div>
                     </div>
-
                 </div>
             </div>
 
-            <!-- Short Description -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Overview</h5>
+            <!-- Overview Card -->
+            <div class="vacancy-detail-card mb-4">
+                <div class="detail-section-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-eye me-2"></i>Overview
+                    </h5>
                 </div>
-                <div class="card-body">
-                    <p class="lead">{{ vacancy.short_description }}</p>
+                <div class="vacancy-detail-body">
+                    <p class="text-light mb-0">{{ vacancy.short_description }}</p>
                 </div>
             </div>
 
-            <!-- Full Description -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="mb-0">Job Description</h5>
+            <!-- Job Description Card -->
+            <div class="vacancy-detail-card mb-4">
+                <div class="detail-section-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-file-text me-2"></i>Job Description
+                    </h5>
                 </div>
-                <div class="card-body">
-                    <div class="vacancy-description">
+                <div class="vacancy-detail-body">
+                    <div class="vacancy-description text-light">
                         {{ vacancy.full_description|replace('\n', '<br>')|safe }}
                     </div>
                 </div>
             </div>
-
-            <!-- Action Buttons -->
-            <div class="card">
-                <div class="card-body text-center">
-                    {% if current_user.is_authenticated and current_user == vacancy.author %}
-                        <div class="btn-group" role="group">
-                            <a href="{{ url_for('edit_vacancy', vacancy_id=vacancy.id) }}"
-                               class="btn btn-outline-primary">
-                               Edit
-                            </a>
-
-                            <form action="{{ url_for('delete_vacancy', vacancy_id=vacancy.id) }}"
-                                  method="POST"
-                                  class="d-inline">
-                                <button type="submit"
-                                        class="btn btn-outline-danger"
-                                        onclick="return confirm('Are you sure that you want to delete this vacancy?')">
-                                    Delete
-                                </button>
-                            </form>
-                        </div>
-                    {% endif %}
-                </div>
-            </div>
-
         </div>
     </div>
 </div>
+
+<style>
+.vacancy-meta-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+}
+
+.detail-section-header {
+    background: rgba(138, 43, 226, 0.15);
+    padding: 1rem 1.5rem;
+    color: var(--text-light);
+    border-bottom: 1px solid var(--accent-purple);
+    margin: -1px -1px 0 -1px;
+}
+
+.detail-section-header h5 {
+    margin: 0;
+    font-weight: 600;
+    color: var(--accent-yellow);
+}
+
+.vacancy-detail-header {
+    background: rgba(138, 43, 226, 0.2);
+    padding: 1.5rem;
+    color: white;
+    border-bottom: 1px solid var(--accent-purple);
+    margin: -1px -1px 0 -1px;
+}
+
+.vacancy-detail-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.vacancy-detail-body {
+    padding: 1.5rem;
+}
+
+.vacancy-description {
+    line-height: 1.6;
+    font-size: 1.05rem;
+}
+
+.vacancy-description br {
+    margin-bottom: 0.5rem;
+    display: block;
+    content: "";
+}
+</style>
 {% endblock %}
