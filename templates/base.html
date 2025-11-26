@@ -4,18 +4,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{% block title %}hmm forgetting sth rnt we?{% endblock %}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+
+    <title>
+        {% block title %}
+            hmm forgetting sth rnt we?
+        {% endblock %}
+    </title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB"
+          crossorigin="anonymous">
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 
 <body>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
 
-    {# Navigation #}
+    <!-- Navigation -->
     <nav class="navbar navbar-expand-lg bg-body-tertiary">
         <div class="container-fluid">
-            {# Left side - Navigation links #}
+
+            <!-- Left Navigation Items -->
             <div class="navbar-nav">
                 <a class="nav-link" href="{{ url_for('vacancies') }}">Vacancies</a>
 
@@ -27,11 +37,12 @@
                     <a class="nav-link" href="{{ url_for('register') }}">Register</a>
                     <a class="nav-link" href="{{ url_for('login') }}">LogIn</a>
                 {% endif %}
+
                 <a class="nav-link" href="{{ url_for('cat_pics') }}">Still can't find good vacancy?</a>
                 <a class="nav-link" href="{{ url_for('about') }}">About</a>
             </div>
 
-            {# Right side - User info #}
+            <!-- Right User Info -->
             <div class="d-flex align-items-center ms-auto me-3">
                 {% if current_user.is_authenticated %}
                     <span class="navbar-text me-3">{{ current_user.username }}</span>
@@ -41,14 +52,14 @@
                          width="40"
                          height="40">
                 {% else %}
-                     <span class="navbar-text me-3">Guest</span>
+                    <span class="navbar-text me-3">Guest</span>
                 {% endif %}
             </div>
+
         </div>
     </nav>
 
-
-{#  Flash Messages at the bottom#}
+    <!-- Flash Messages -->
     <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
@@ -62,22 +73,26 @@
         {% endwith %}
     </div>
 
-{#  Auto-hide flash messages after 3 seconds#}
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-            var alerts = document.querySelectorAll('.alert');
-            alerts.forEach(function(alert) {
-                var bsAlert = new bootstrap.Alert(alert);
-                bsAlert.close();
-            });
-        }, 5000);
-    });
-    </script>
-
+    <!-- Page Content -->
     {% block content %}
     {% endblock %}
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI"
+            crossorigin="anonymous"></script>
+
+    <!-- Auto-hide flash messages -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(function () {
+                document.querySelectorAll('.alert').forEach(function (alert) {
+                    var bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                });
+            }, 5000);
+        });
+    </script>
 
 </body>
 </html>

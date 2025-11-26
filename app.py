@@ -116,21 +116,43 @@ def test_relationship():
     Relationship works! 
     """
 
+
 @app.route('/')
-@app.route('/page/<int:page>')  # Add this route
-def vacancies(page=1):  # Default to page 1
-    per_page = 6  # Show 6 vacancies per page
-    vacancies_pagination = Vacancy.query.order_by(Vacancy.date_created.desc()).paginate(
+@app.route('/page/<int:page>')
+def vacancies(page=1):
+    per_page = 6
+
+    # Get filters from request args
+    category_filter = request.args.get('category', 'all')
+    sort_by = request.args.get('sort', 'newest')  # newest or oldest
+
+    # Base query
+    query = Vacancy.query
+
+    # Apply category filter if not 'all'
+    if category_filter != 'all':
+        query = query.filter_by(category=category_filter)
+
+    # Apply sorting
+    if sort_by == 'oldest':
+        query = query.order_by(Vacancy.date_created.asc())
+    else:  # newest (default)
+        query = query.order_by(Vacancy.date_created.desc())
+
+    # Paginate
+    vacancies_pagination = query.paginate(
         page=page, per_page=per_page, error_out=False
     )
 
     # Redirect to last page if page number is too high
-    if page > vacancies_pagination.pages > 0:
-        return redirect(url_for('vacancies', page=vacancies_pagination.pages))
+    if page > vacancies_pagination.pages and vacancies_pagination.pages > 0:
+        return redirect(url_for('vacancies', page=vacancies_pagination.pages,
+                                category=category_filter, sort=sort_by))
 
-
-    return render_template('index.html', vacancies=vacancies_pagination)
-
+    return render_template('index.html',
+                           vacancies=vacancies_pagination,
+                           current_category=category_filter,
+                           current_sort=sort_by)
 
 @app.route('/vacancy/<int:vacancy_id>')
 def vacancy_info(vacancy_id):
@@ -180,34 +202,6 @@ def edit_vacancy(vacancy_id):
 @app.route('/about')
 def about():
     return render_template('about.html')
-
-
-# @app.route('/login', methods=['GET', 'POST'])
-# def login():
-#     # if user is already logged in, redirect to profile
-#     if current_user.is_authenticated:
-#         return redirect(url_for('profile'))
-#
-#     login_form = LoginForm()
-#     if login_form.validate_on_submit():
-#         username = login_form.username.data
-#         password = login_form.password.data
-#
-#         # find user by username
-#         user = User.query.filter_by(username=username).first()
-#
-#         # check if user exists and password is correct
-#         if user and user.check_password(password):
-#             login_user(user)
-#             logger.info(f"User <{username}> logged in successfully")
-#             flash(f'Nice to see you, {username}!', 'info')
-#             return redirect(url_for('profile'))
-#         else:
-#             flash('Invalid username or password', 'danger')
-#             logger.warning(f"Failed Login attempt by user {username}")
-#             return redirect(url_for('login'))
-#
-#     return render_template('login.html', form=login_form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
