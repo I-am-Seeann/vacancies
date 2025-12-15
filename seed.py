@@ -1,23 +1,25 @@
 import random
 
 from app import db
-from data import job_data, usernames
+from mock_data import job_data, usernames
 from models import User, Vacancy
 
 
-def seed_data():
+def populate_database():
     users = []
+    # Adding Users
     for username in usernames:
         user = User(
             username=username,
             email=f'{username}@gmail.com',
-            image_file='default.png'
+            image_filename='default.png'
         )
         user.password = '11111111'
         users.append(user)
         db.session.add(user)
     db.session.commit()
 
+    # Adding Vacancies
     for _ in range(20):
         author = random.choice(users)
         job = random.choice(job_data)

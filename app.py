@@ -11,7 +11,7 @@ from cat_api import get_random_cat
 from db import db
 from forms import LoginForm, RegistrationForm, EditProfileForm, VacancyForm, EditVacancyForm
 from models import User, Vacancy
-from seed import seed_data
+from seed import populate_database
 
 
 app = Flask(__name__)
@@ -51,7 +51,7 @@ with app.app_context():
 
     # Auto-seed with sample data if database is empty
     if User.query.count() == 0:
-        seed_data()
+        populate_database()
 
 # ------------------------ROUTES------------------------
 
@@ -333,10 +333,10 @@ def edit_profile():
             if edited_form.image.data:
                 random_hex = secrets.token_hex(8)
                 _, ext = os.path.splitext(edited_form.image.data.filename)
-                image_file = f'{random_hex}{ext}'
-                image_path = os.path.join(app.root_path, 'static/images', image_file)
+                image_filename = f'{random_hex}{ext}'
+                image_path = os.path.join(app.root_path, 'static/images', image_filename)
                 edited_form.image.data.save(image_path)
-                current_user.image_file = image_file
+                current_user.image_filename = image_filename
 
             db.session.commit()
             logger.info(f"User <{current_user.username}> edited profile")
