@@ -27,4 +27,7 @@ instance/
 .DS_Store
 Thumbs.db
 
+# Logs
+*.log
+
 .env
