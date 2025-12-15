@@ -3,6 +3,7 @@ import os
 import secrets
 from logging.handlers import RotatingFileHandler
 
+from dotenv import load_dotenv
 from flask import Flask, render_template, url_for, redirect, flash, request
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from flask_wtf import CSRFProtect
@@ -14,15 +15,16 @@ from models import User, Vacancy
 from seed import populate_database
 
 
+load_dotenv()
 app = Flask(__name__)
-
 app.config["SECRET_KEY"] = os.environ.get('SECRET_KEY') or 'dev-key-for-testing-only'
-csrf = CSRFProtect(app) # for manual forms for example: delete in profile
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///vacancies.db'
+
+csrf = CSRFProtect(app) # for manual forms for example: delete in profile
 
 # Initialize Flask-Login
 login_manager = LoginManager()
-login_manager.init_app(app)
+login_manager.init_app(app=app)
 login_manager.login_view = 'login'
 
 # This makes ALL logs go to console
@@ -33,16 +35,16 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger('JobBoard')
-file_handler = RotatingFileHandler('logs/job_portal.log', maxBytes=10000, backupCount=5)
+file_handler = RotatingFileHandler(filename='logs/job_portal.log', maxBytes=10_000, backupCount=5)
 file_handler.setFormatter(logging.Formatter('%(asctime)s %(levelname)s JobBoard %(message)s'))
-logger.addHandler(file_handler)
-logger.setLevel(logging.INFO)
+logger.addHandler(hdlr=file_handler)
+logger.setLevel(level=logging.INFO)
 logger.propagate = False  # Important: don't duplicate to basic config handlers
 
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return User.query.get(ident=int(user_id))
 
 
 db.init_app(app)
@@ -58,13 +60,13 @@ with app.app_context():
 # ------------------------VACANCIES------------------------
 # Home page for all the vacancies
 @app.route('/')
-@app.route('/page/<int:page>')
-def vacancies(page=1):
-    per_page = 6
+def vacancies():
+    per_page = 6  # Max number of vacancies on one page
 
-    # Get filters from request args
-    category_filter = request.args.get('category', 'all')
-    sort_by = request.args.get('sort', 'newest')  # newest or oldest
+    # Get filters and page number from request args
+    category_filter = request.args.get(key='category', default='all')
+    sort_by = request.args.get(key='sort', default='newest')
+    page = request.args.get(key='page', default=1, type=int)
 
     # Base query
     query = Vacancy.query
@@ -85,20 +87,22 @@ def vacancies(page=1):
     )
 
     # Redirect to last page if page number is too high
-    if page > vacancies_pagination.pages and vacancies_pagination.pages > 0:
-        return redirect(url_for('vacancies', page=vacancies_pagination.pages,
-                                category=category_filter, sort=sort_by))
+    if page > vacancies_pagination.pages > 0:
+        return redirect(url_for(endpoint='vacancies',
+                                page=vacancies_pagination.pages,
+                                category=category_filter,
+                                sort=sort_by))
 
-    return render_template('index.html',
+    return render_template(template_name_or_list='index.html',
                            vacancies=vacancies_pagination,
                            current_category=category_filter,
                            current_sort=sort_by)
+
 # Single vacancy information
 @app.route('/vacancy/<int:vacancy_id>')
 def vacancy_info(vacancy_id):
-    vacancy = Vacancy.query.get_or_404(vacancy_id)
-    return render_template('vacancy.html', vacancy=vacancy)
-
+    vacancy = Vacancy.query.get_or_404(ident=int(vacancy_id))
+    return render_template(template_name_or_list='vacancy.html', vacancy=vacancy)
 
 # For adding new vacancy
 @app.route('/add_vacancy', methods=['GET', 'POST'])
@@ -266,10 +270,11 @@ def logout():
 # -----------------USER PROFILE-----------------
 # Viewing logged-in user's profile page
 @app.route('/profile')
-@app.route('/profile/page/<int:page>')
 @login_required
-def profile(page=1):
-    per_page = 3
+def profile():
+    per_page = 3  # Max number of vacancies on one page
+    page = request.args.get('page', 1, type=int)
+
     vacancies_pagination = Vacancy.query.filter_by(author_id=current_user.id) \
         .order_by(Vacancy.date_created.desc()) \
         .paginate(page=page, per_page=per_page, error_out=False)
@@ -283,10 +288,10 @@ def profile(page=1):
 
 # Viewing other user's profile page
 @app.route('/user/<string:username>')
-@app.route('/user/<string:username>/page/<int:page>')
 def user_profile(username, page=1):
     user = User.query.filter_by(username=username).first_or_404()
     per_page = 3
+    page = request.args.get('page', 1, type=int)
     vacancies_pagination = Vacancy.query.filter_by(author_id=user.id) \
         .order_by(Vacancy.date_created.desc()) \
         .paginate(page=page, per_page=per_page, error_out=False)

@@ -1,10 +1,5 @@
-import os
-
 import requests
-from dotenv import load_dotenv
 
-
-load_dotenv()
 
 def get_random_cat(logger):
     try:
