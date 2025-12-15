@@ -10,23 +10,19 @@ from wtforms import (
 )
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 
-MIN_PASSWORD_LENGTH = 8
-MAX_PASSWORD_LENGTH = 20
-MAX_USERNAME_LENGTH = 25
-
 
 class RegistrationForm(FlaskForm):
     email = StringField(
         "Email",
-        validators=[DataRequired(), Email()]
+        validators=[DataRequired(), Length(max=120), Email()]
     )
     username = StringField(
         "Username",
-        validators=[DataRequired(), Length(max=MAX_USERNAME_LENGTH)]
+        validators=[DataRequired(), Length(max=25)]
     )
     password = PasswordField(
         "Password",
-        validators=[DataRequired(), Length(min=MIN_PASSWORD_LENGTH, max=MAX_PASSWORD_LENGTH)]
+        validators=[DataRequired(), Length(min=8, max=20)]
     )
     confirm_password = PasswordField(
         "Confirm Password",
@@ -42,7 +38,7 @@ class EditProfileForm(FlaskForm):
     )
     username = StringField(
         "Username",
-        validators=[DataRequired(), Length(max=MAX_USERNAME_LENGTH)]
+        validators=[DataRequired(), Length(max=25)]
     )
     image = FileField(
         "Change profile picture",
@@ -82,7 +78,7 @@ class VacancyForm(FlaskForm):
     )
     salary = StringField(
         "Salary",
-        validators=[DataRequired(), Length(max=20)]
+        validators=[DataRequired(), Length(max=50)]
     )
     location = StringField(
         "Location",
@@ -102,40 +98,5 @@ class VacancyForm(FlaskForm):
     submit = SubmitField("Post Vacancy")
 
 
-class EditVacancyForm(FlaskForm):
-    title = StringField(
-        "Job Title",
-        validators=[DataRequired(), Length(max=100)]
-    )
-    short_description = TextAreaField(
-        "Short Description",
-        validators=[DataRequired(), Length(max=200)]
-    )
-    full_description = TextAreaField(
-        "Full Description",
-        validators=[DataRequired()]
-    )
-    company = StringField(
-        "Company",
-        validators=[DataRequired(), Length(max=50)]
-    )
-    salary = StringField(
-        "Salary",
-        validators=[DataRequired(), Length(max=20)]
-    )
-    location = StringField(
-        "Location",
-        validators=[DataRequired(), Length(max=50)]
-    )
-    category = SelectField(
-        "Category",
-        choices=[
-            ("it", "IT"),
-            ("design", "Design"),
-            ("marketing", "Marketing"),
-            ("sales", "Sales"),
-            ("other", "Other"),
-        ],
-        validators=[DataRequired()]
-    )
+class EditVacancyForm(VacancyForm):
     submit = SubmitField("Update Vacancy")
