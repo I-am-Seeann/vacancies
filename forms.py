@@ -10,8 +10,7 @@ from wtforms import (
 )
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 
-
-class RegistrationForm(FlaskForm):
+class UserForm(FlaskForm):
     email = StringField(
         "Email",
         validators=[DataRequired(), Length(max=120), Email()]
@@ -20,6 +19,8 @@ class RegistrationForm(FlaskForm):
         "Username",
         validators=[DataRequired(), Length(max=25)]
     )
+
+class RegistrationForm(UserForm):
     password = PasswordField(
         "Password",
         validators=[DataRequired(), Length(min=8, max=20)]
@@ -31,15 +32,7 @@ class RegistrationForm(FlaskForm):
     submit = SubmitField("Register")
 
 
-class EditProfileForm(FlaskForm):
-    email = StringField(
-        "Email",
-        validators=[DataRequired(), Email()]
-    )
-    username = StringField(
-        "Username",
-        validators=[DataRequired(), Length(max=25)]
-    )
+class EditProfileForm(UserForm):
     image = FileField(
         "Change profile picture",
         validators=[FileAllowed(["jpg", "png", "jpeg"])]

@@ -10,11 +10,11 @@ from flask_wtf import CSRFProtect
 
 from cat_api import get_random_cat
 from db import db
-from forms import LoginForm, RegistrationForm, EditProfileForm, VacancyForm, EditVacancyForm
+from forms import LoginForm, RegistrationForm, EditProfileForm, VacancyForm, EditVacancyForm, UserForm
 from models import User, Vacancy
 from seed import populate_database
 
-
+#TODO make logs uniform
 load_dotenv()
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get('SECRET_KEY') or 'dev-key-for-testing-only'
@@ -122,12 +122,18 @@ def add_vacancy():
         )
         db.session.add(vacancy)
         db.session.commit()
-        logger.info(f"User <{current_user.username}> added vacancy <{vacancy.title}>")
-        flash('Vacancy posted successfully!', 'success')
-        return redirect(url_for('profile'))
+        logger.info(f"UserID: <{current_user.id}> with username: <{current_user.username}> \
+                    added vacancy <{vacancy.id}> with title <{vacancy.title}>")
+        flash(message='Vacancy posted successfully!', category='success')
+        return redirect(url_for(endpoint='vacancy_info', vacancy_id=vacancy.id))
 
-    return render_template('add_vacancy.html', form=vacancy_form)
+    return render_template(template_name_or_list='add_vacancy.html', form=vacancy_form)
 
+def invalid_author(action = None, author = None):
+    if author != current_user:
+        flash(message=f'You can only {action} your own vacancies!', category='danger')
+        return True
+    return False
 
 # For editing a vacancy
 @app.route('/edit_vacancy/<int:vacancy_id>', methods=['GET', 'POST'])
@@ -136,9 +142,8 @@ def edit_vacancy(vacancy_id):
     vacancy = Vacancy.query.get_or_404(vacancy_id)
 
     # Check if current user is the author
-    if vacancy.author != current_user:
-        flash('You can only edit your own vacancies!', 'danger')
-        return redirect(url_for('vacancies'))
+    if invalid_author(action='edit', author=vacancy.author):
+        return redirect(url_for(endpoint='vacancies'))
 
     form = EditVacancyForm()
 
@@ -162,11 +167,12 @@ def edit_vacancy(vacancy_id):
         vacancy.location = form.location.data
 
         db.session.commit()
-        logger.info(f"Updated vacancy title: <{vacancy.title}> by <{vacancy.author.username}>")
-        flash('Vacancy updated successfully!', 'success')
-        return redirect(url_for('vacancy_info', vacancy_id=vacancy.id))
+        logger.info(f"Updated vacancy <{vacancy.id}> with title: <{vacancy.title}> \
+                    by UserID <{current_user.id}> with username <{vacancy.author.username}>")
+        flash(message='Vacancy updated successfully!', category='success')
+        return redirect(url_for(endpoint='vacancy_info', vacancy_id=vacancy.id))
 
-    return render_template('edit_vacancy.html', form=form, vacancy=vacancy)
+    return render_template(template_name_or_list='edit_vacancy.html', form=form, vacancy=vacancy)
 
 # For deleting a vacancy
 @app.route('/delete_vacancy/<int:vacancy_id>', methods=['POST'])
@@ -175,45 +181,46 @@ def delete_vacancy(vacancy_id):
     vacancy = Vacancy.query.get_or_404(vacancy_id)
 
     # Check if current user is the author
-    if vacancy.author != current_user:
-        flash('You can only delete your own vacancies!', 'danger')
-        return redirect(url_for('vacancies'))
+    if invalid_author(action='delete', author=vacancy.author):
+        return redirect(url_for(endpoint='vacancies'))
 
     db.session.delete(vacancy)
     db.session.commit()
-    logger.info(f"User <{current_user.username}> deleted vacancy <{vacancy_id}>")
-    flash('Vacancy deleted successfully!', 'success')
-    return redirect(url_for('profile'))
-
+    logger.info("User <{current_user.username}> deleted vacancy <{vacancy_id}>")
+    flash(message='Vacancy deleted successfully!', category='success')
+    return redirect(url_for(endpoint='profile'))
 
 # -----------------USER AUTHENTICATION-----------------
+def email_already_exists(form: UserForm) -> bool:
+     existing_email = User.query.filter_by(email=form.email.data).first()
+     if existing_email:
+         message = f'Profile with email: <{form.email.data}> already exists'
+         logger.warning(message)
+         flash(message, 'danger')
+         form.email.errors.append(message)
+         return True
+     return False
+
+def username_already_exists(form: UserForm) -> bool:
+    existing_username = User.query.filter_by(username=form.username.data).first()
+    if existing_username:
+        message = f'Profile with username: <{form.username.data}> already exists'
+        logger.warning(message)
+        flash(message, 'danger')
+        form.username.errors.append(message)
+        return True
+    return False
+
 # Registering user
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     # if user is already logged in, redirect to profile
     if current_user.is_authenticated:
-        return redirect(url_for('profile'))
+        return redirect(url_for(endpoint='profile'))
 
     register_form = RegistrationForm()
     if register_form.validate_on_submit():
-        # check if user with same mail already exists
-        user_filtered_by_email = User.query.filter_by(email=register_form.email.data).first()
-        if user_filtered_by_email:
-            message = f'Profile with email: <{user_filtered_by_email.email}> already exists'
-            logger.warning(message)
-            flash(message, 'danger')
-            register_form.email.errors.append(message)
-
-        # check if username is already taken
-        user_filtered_by_username = User.query.filter_by(username=register_form.username.data).first()
-        if user_filtered_by_username:
-            message = f'Username: <{register_form.username.data}> is taken'
-            logger.info(message)
-            flash(message, 'danger')
-            register_form.username.errors.append(message)
-
-        # Only create user if no duplicate errors
-        if not register_form.email.errors and not register_form.username.errors:
+        if not email_already_exists(form=register_form) and not username_already_exists(form=register_form):
             # creating new user
             user = User(username=register_form.username.data, email=register_form.email.data)
             user.password = register_form.password.data
@@ -222,10 +229,10 @@ def register():
             db.session.add(user)
             db.session.commit()
             logger.info(f"User <{user.username}> registered successfully")
-            flash(f"Welcome {register_form.username.data}! Your account created successfully!", 'success')
-            return redirect(url_for('login'))
+            flash(message="Welcome {register_form.username.data}! Your account created successfully!", category='success')
+            return redirect(url_for(endpoint='login'))
 
-    return render_template('register.html', form=register_form)
+    return render_template(template_name_or_list='register.html', form=register_form)
 
 
 # Logging in user
@@ -247,14 +254,14 @@ def login():
         if user and user.check_password(password):
             login_user(user)
             logger.info(f"User <{username}> logged in successfully")
-            flash(f'Nice to see you, {username}!', 'info')
+            flash(message='Nice to see you, {username}!', category='info')
             return redirect(url_for('profile'))
         else:
             # Add error to form instead of flash
             login_form.username.errors.append('Invalid username or password')
             logger.warning(f'Failed Login attempt by user <{username}>')
 
-    return render_template('login.html', form=login_form)
+    return render_template(template_name_or_list='login.html', form=login_form)
 
 
 # Loging out user
@@ -269,39 +276,28 @@ def logout():
 
 # -----------------USER PROFILE-----------------
 # Viewing logged-in user's profile page
-@app.route('/profile')
-@login_required
-def profile():
-    per_page = 3  # Max number of vacancies on one page
-    page = request.args.get('page', 1, type=int)
-
-    vacancies_pagination = Vacancy.query.filter_by(author_id=current_user.id) \
-        .order_by(Vacancy.date_created.desc()) \
-        .paginate(page=page, per_page=per_page, error_out=False)
-
-    # Redirect to last page if page number is too high
-    if page > vacancies_pagination.pages > 0:
-        return redirect(url_for('profile', page=vacancies_pagination.pages))
-
-    return render_template('profile.html', user=current_user, vacancies=vacancies_pagination)
-
-
-# Viewing other user's profile page
-@app.route('/user/<string:username>')
-def user_profile(username, page=1):
-    user = User.query.filter_by(username=username).first_or_404()
+def show_user_profile(user: User, endpoint: str):
     per_page = 3
-    page = request.args.get('page', 1, type=int)
+    page = request.args.get(key='page', default=1, type=int)
     vacancies_pagination = Vacancy.query.filter_by(author_id=user.id) \
         .order_by(Vacancy.date_created.desc()) \
         .paginate(page=page, per_page=per_page, error_out=False)
-
     # Redirect to last page if page number is too high
     if page > vacancies_pagination.pages > 0:
-        return redirect(url_for('user_profile', username=username, page=vacancies_pagination.pages))
+        return redirect(url_for(endpoint=endpoint, username=user.username, page=vacancies_pagination.pages))
 
-    return render_template('profile.html', user=user, vacancies=vacancies_pagination)
+    return render_template(template_name_or_list='profile.html', user=user, vacancies=vacancies_pagination)
 
+@app.route('/profile')
+@login_required
+def profile():
+    return show_user_profile(user=current_user, endpoint='profile')
+
+# Viewing other user's profile page
+@app.route('/user/<string:username>')
+def user_profile(username: str):
+    user = User.query.filter_by(username=username).first_or_404()
+    return show_user_profile(user=user, endpoint='user_profile')
 
 # Editing logged-in user's profile page
 @app.route('/edit_profile', methods=['GET', 'POST'])
@@ -313,42 +309,25 @@ def edit_profile():
         edited_form.username.data = current_user.username
         edited_form.email.data = current_user.email
 
-    if edited_form.validate_on_submit():
-        # Check if email is already taken by another user
-        user_filtered_by_email = User.query.filter_by(email=edited_form.email.data).first()
-        if user_filtered_by_email and user_filtered_by_email.id != current_user.id:
-            message = f'Profile with email: <{edited_form.email.data}> already exists'
-            logger.warning(message)
-            flash(message, 'danger')
-            edited_form.email.errors.append(message)
-
-        # Check if username is already taken by another user
-        user_filtered_by_username = User.query.filter_by(username=edited_form.username.data).first()
-        if user_filtered_by_username and user_filtered_by_username.id != current_user.id:
-            message = f'Username: <{edited_form.username.data}> is taken'
-            logger.info(message)
-            flash(message, 'danger')
-            edited_form.username.errors.append(message)
-
         # Only update user if no duplicate errors
-        if not edited_form.email.errors and not edited_form.username.errors:
+        if not email_already_exists(form=edited_form) and not username_already_exists(form=edited_form):
             current_user.username = edited_form.username.data
             current_user.email = edited_form.email.data
 
             if edited_form.image.data:
-                random_hex = secrets.token_hex(8)
-                _, ext = os.path.splitext(edited_form.image.data.filename)
+                random_hex = secrets.token_hex(nbytes=8)
+                _, ext = os.path.splitext(p=edited_form.image.data.filename)
                 image_filename = f'{random_hex}{ext}'
-                image_path = os.path.join(app.root_path, 'static/images', image_filename)
+                image_path = os.path.join(app.root_path, 'static', 'images', image_filename)
                 edited_form.image.data.save(image_path)
                 current_user.image_filename = image_filename
 
             db.session.commit()
             logger.info(f"User <{current_user.username}> edited profile")
-            flash('Your changes have been saved!', 'success')
-            return redirect(url_for('profile'))
+            flash(message='Your changes have been saved!', category='success')
+            return redirect(url_for(endpoint='profile'))
 
-    return render_template('edit_profile.html', form=edited_form)
+    return render_template(template_name_or_list='edit_profile.html', form=edited_form)
 
 
 # Deleting logged-in user's profile page
@@ -366,98 +345,34 @@ def delete_profile():
 
     logger.info(f"User <{current_user.username}> deleted profile")
     logout_user()
-    flash('Your account and all associated vacancies have been deleted.', 'info')
-    return redirect(url_for('vacancies'))
+    flash(message='Your account and all associated vacancies have been deleted.', category='info')
+    return redirect(url_for(endpoint='vacancies'))
 
 
 # -----------------ABOUT PAGE-----------------
 @app.route('/about')
 def about():
-    return render_template('about.html')
+    return render_template(template_name_or_list='about.html')
 
 
 # -----------------FOR EXTERNAL API-----------------
 @app.route('/cat_pics')
 def cat_pics():
-    cat_image_url = get_random_cat(logger)
-    return render_template('cat_pics.html', cat_image_url=cat_image_url)
+    cat_image_url = get_random_cat()
+    return render_template(template_name_or_list='cat_pics.html', cat_image_url=cat_image_url)
 
 
 # -----------------ERRORS-----------------
 @app.errorhandler(404)
 def page_not_found(e):
+    logger.error(f'Page not found: {e}')
     return render_template('errors/404.html'), 404
 
 @app.errorhandler(500)
 def internal_server_error(e):
+    logger.error(f'Internal server error: {e}')
     return render_template('errors/500.html'), 500
 
 @app.route('/test-500')
 def test_500():
     raise Exception("This is a test 500 error!")
-
-
-# -----------------FOR TESTING-----------------
-@app.route('/test-db')
-def test_db():
-    try:
-        db.create_all()
-        return "Database tables created successfully!"
-    except Exception as e:
-        return f"Error: {str(e)}"
-
-@app.route('/users')
-def show_users():
-    users = User.query.all()
-    return f"Total users: {len(users)}<br>" + "<br>".join([f"User: {user.username} - {user.email}" for user in users])
-
-@app.route('/add-test-user')
-def add_test_user():
-    user = User(username='testuser', email='test@test.com')
-    user.password = 'password123'
-    db.session.add(user)
-    db.session.commit()
-    return "Test user added!"
-
-@app.route('/test-relationship')
-def test_relationship():
-    # Clear any existing data
-    Vacancy.query.delete()
-    User.query.delete()
-    db.session.commit()
-
-    # Create a test user
-    user = User(username='testuser', email='test@test.com')
-    user.password = 'password123'
-    db.session.add(user)
-    db.session.commit()
-
-    # Create a vacancy for that user
-    vacancy = Vacancy(
-        title='Software Developer',
-        category='IT',
-        author_id=user.id,
-        short_description='Develop amazing software',
-        full_description='We are looking for a skilled software developer...',
-        company='Tech Corp',
-        salary='$80,000',
-        location='Remote'
-    )
-    db.session.add(vacancy)
-    db.session.commit()
-
-    # Test the relationship - get user's vacancies
-    user_vacancies = user.vacancies
-    vacancy_author = vacancy.author
-
-    return f"""
-    User: {user.username}<br>
-    User's vacancies: {len(user_vacancies)}<br>
-    First vacancy title: {user_vacancies[0].title if user_vacancies else 'None'}<br>
-    Vacancy author: {vacancy_author.username}<br>
-    Relationship works! 
-    """
-
-
-if __name__ == '__main__':
-    app.run(debug=True)
